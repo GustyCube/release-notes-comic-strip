@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import type { PR } from "./gh.js";
 
 export type PanelPlan = { caption: string; dialogue: string; prompt: string };
-export type Plan = { title: string; panels: PanelPlan[]; alt: string };
+export type Plan = { title: string; panels: PanelPlan[]; alt: string; selectedPRs: PR[] };
 
 export async function planPanels(prs: PR[], style: string, persona: string): Promise<Plan> {
   console.log("[Planner] Starting panel planning...");
@@ -15,7 +15,7 @@ export async function planPanels(prs: PR[], style: string, persona: string): Pro
   const alt = prs.map(p=>`• #${p.number} ${p.title}`).join("\n");
   console.log("[Planner] Title:", title);
   const client = new OpenAI({ apiKey });
-  const sys = "You are a comic strip writer creating fun comics about software development. Output concise JSON with exactly four panels. Each panel must include: caption (the PR title/number), dialogue (<=120 chars, upbeat and developer-friendly), prompt (IMPORTANT: Generate a comic book style panel. Show cartoon developer characters with expressions and poses. Include the dialogue in speech bubbles within the image. Add visual comic elements: thought clouds, action lines, sound effects (BOOM!, WHOOSH!, etc). Scene should be in classic comic book art style with bold outlines, flat colors, and dynamic poses. The speech bubbles should contain the actual dialogue text specified).";
+  const sys = "You are a comic strip writer creating fun comics about software development. Output concise JSON with exactly four panels AND the 4 most significant PR numbers. Format: {title, panels:[{caption,dialogue,prompt}], alt, selectedPRNumbers:[]}. Each panel must include: caption (the PR title/number), dialogue (<=120 chars, upbeat and developer-friendly), prompt (IMPORTANT: Generate a comic book style panel. Show cartoon developer characters with expressions and poses. Include the dialogue in speech bubbles within the image. Add visual comic elements: thought clouds, action lines, sound effects (BOOM!, WHOOSH!, etc). Scene should be in classic comic book art style with bold outlines, flat colors, and dynamic poses. The speech bubbles should contain the actual dialogue text specified).";
   const prDetails = prs.map(pr => {
     let details = `#${pr.number} ${pr.title}`;
     if (pr.body && pr.body.trim()) {
@@ -48,7 +48,7 @@ ${prDetails}`;
       messages: [
         { role: "system", content: sys },
         { role: "user", content: userPrompt },
-        { role: "user", content: "Return JSON: { title, panels:[{caption,dialogue,prompt}], alt } with exactly 4 panels." }
+        { role: "user", content: "Return JSON: { title, panels:[{caption,dialogue,prompt}], alt, selectedPRNumbers:[1,2,3,4] } with exactly 4 panels and 4 PR numbers." }
       ],
       response_format: { type: "json_object" },
       temperature: 0.7
@@ -70,6 +70,28 @@ ${prDetails}`;
     parsed.title = parsed.title || title;
     parsed.alt = parsed.alt || alt;
     parsed.panels = parsed.panels.slice(0, 4);
+    
+    // Extract selected PRs based on AI selection
+    const selectedPRNumbers = parsed.selectedPRNumbers || [];
+    const selectedPRs: PR[] = [];
+    
+    if (selectedPRNumbers.length > 0) {
+      // Match selected PR numbers to actual PR objects
+      for (const prNumber of selectedPRNumbers.slice(0, 4)) {
+        const pr = prs.find(p => p.number === prNumber);
+        if (pr) selectedPRs.push(pr);
+      }
+    }
+    
+    // Fallback to first 4 PRs if AI didn't select enough or invalid numbers
+    while (selectedPRs.length < 4 && selectedPRs.length < prs.length) {
+      const nextPR = prs.find(p => !selectedPRs.includes(p));
+      if (nextPR) selectedPRs.push(nextPR);
+      else break;
+    }
+    
+    parsed.selectedPRs = selectedPRs;
+    console.log("[Planner] Selected PRs:", selectedPRs.map(p => `#${p.number}`).join(', '));
     console.log("[Planner] Final plan ready with", parsed.panels.length, "panels");
     return parsed as Plan;
   } catch (error: any) {

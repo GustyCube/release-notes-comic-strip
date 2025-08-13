@@ -24,7 +24,7 @@ async function run() {
   fs.mkdirSync(work, { recursive: true });
   const panelPaths = await renderPanels(plan.panels, work, style);
   const outPNG = path.join(work, "comic-1x4.png");
-  await stitch1x4(panelPaths, outPNG, plan.title, plan.panels, prs.slice(0, 4));
+  await stitch1x4(panelPaths, outPNG, plan.title, plan.panels, plan.selectedPRs);
 
   const releaseBody = `## ${plan.title}\n\n${plan.alt}\n\n— Generated as a 1×4 comic from merged PRs between \`${from}\` → \`${to}\``;
   await createOrUpdateReleaseWithAsset(octo, owner, repo, to, plan.title, releaseBody, outPNG, attachName);

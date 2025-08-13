@@ -26,5 +26,5 @@ const panels = await images.renderPanels(plan.panels, path.join(outDir, "panels"
 
 console.log("Stitching 1x4...");
 const outPng = path.join(outDir, "comic-1x4.png");
-await compose.stitch1x4(panels, outPng, plan.title, plan.panels, prs.slice(0, 4));
+await compose.stitch1x4(panels, outPng, plan.title, plan.panels, plan.selectedPRs);
 console.log("Done ->", outPng);

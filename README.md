@@ -8,18 +8,23 @@
 Turns merged PRs between releases into a 4-panel comic strip and attaches it to your GitHub release.
 
 ## How it works
+
 1. Collects merged PRs between two tags
-2. **Planner** (GPT-4o) analyzes PR titles, descriptions, labels, and authors to create a comic narrative
-3. **Image gen** (DALL-E 3) renders 4 comic-style panels with speech bubbles and visual effects
-4. **Composer** stitches panels into a comic strip with PR titles above each panel
+2. **AI Selection** (GPT-4o) intelligently picks the 4 most significant PRs from all available PRs
+3. **Planner** (GPT-4o) analyzes PR titles, descriptions, labels, and authors to create a comic narrative
+4. **Image gen** (DALL-E 3) renders 4 comic-style panels with speech bubbles and visual effects
+5. **Composer** stitches panels into a comic strip with PR titles above each panel
 
 ## What's New
-- **Full PR analysis**: Uses PR body content, labels, and metadata (not just titles)
+
+- **Smart PR selection**: AI picks the 4 most significant PRs when there are more than 4 available
+- **Full PR analysis**: Uses PR body content, labels, and metadata (not just titles)  
 - **True comic styling**: Speech bubbles with dialogue, comic borders, sound effects (POW!, ZAP!)
 - **PR titles displayed**: Each panel shows `#123: Fix login bug` in yellow caption boxes
 - **No fallback mode**: Requires OpenAI API for quality (removed SVG fallback)
 
 ## Inputs
+
 - `from`: start tag (defaults to previous tag)
 - `to`: end tag (defaults to current tag)
 - `style`: art style (`comic`, `retro`, `modern`)
@@ -27,10 +32,12 @@ Turns merged PRs between releases into a 4-panel comic strip and attaches it to 
 - `attach_as`: output filename (default `release-comic.png`)
 
 ## Required Secrets
+
 - `OPENAI_API_KEY`: For GPT-4o and DALL-E 3
 - `GITHUB_TOKEN`: For PR access and release uploads
 
 ## Local test
+
 ```bash
 npm install
 npm run build
@@ -39,6 +46,7 @@ npm run test:local
 ```
 
 Edit `local/test.json` with sample PRs:
+
 ```json
 {
   "prs": [{
@@ -55,6 +63,7 @@ Edit `local/test.json` with sample PRs:
 Output: `local/out/comic-1x4.png`
 
 ## Notes
+
 - Always generates exactly 4 panels in one row
 - Each panel is 1024×1024px
 - Final strip is ~4096×1024px with borders and titles

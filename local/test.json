@@ -27,6 +27,27 @@
       "body": "Created a comprehensive quickstart guide for new developers. Includes setup instructions, architecture overview, and common troubleshooting steps. Added interactive code examples and links to relevant documentation.",
       "user": { "login": "dana-docs" },
       "labels": [{ "name": "documentation" }, { "name": "onboarding" }]
+    },
+    {
+      "number": 105,
+      "title": "Minor: fix typo in footer",
+      "body": "Fixed small typo in footer text. Changed 'Copyight' to 'Copyright'.",
+      "user": { "login": "eve-intern" },
+      "labels": [{ "name": "typo" }, { "name": "minor" }]
+    },
+    {
+      "number": 106,
+      "title": "Security: upgrade dependencies",
+      "body": "Updated all npm dependencies to latest versions to patch security vulnerabilities. Bumped lodash, express, and other packages. Ran full test suite to ensure compatibility.",
+      "user": { "login": "frank-security" },
+      "labels": [{ "name": "security" }, { "name": "dependencies" }]
+    },
+    {
+      "number": 107,
+      "title": "Chore: update eslint config",
+      "body": "Updated ESLint configuration to use latest rules. Added new rules for better code consistency. No functional changes to application code.",
+      "user": { "login": "gary-dev" },
+      "labels": [{ "name": "chore" }, { "name": "linting" }]
     }
   ],
   "style": "comic",
