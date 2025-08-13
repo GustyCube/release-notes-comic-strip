@@ -16,9 +16,11 @@ export async function renderPanels(plans, outDir, style) {
         const p = plans[i];
         console.log(`[Images] Generating panel ${i + 1}/4 with prompt:`, p.prompt.substring(0, 100) + "...");
         try {
+            // Add extra constraints to prevent multiple scenes
+            const constrainedPrompt = `${p.prompt} IMPORTANT: Show only ONE single scene in this panel. Do not create a comic strip layout or multiple panels. This is just ONE panel of a larger comic.`;
             const response = await client.images.generate({
                 model: "dall-e-3",
-                prompt: p.prompt,
+                prompt: constrainedPrompt,
                 size: "1024x1024",
                 quality: "standard",
                 response_format: "b64_json",
