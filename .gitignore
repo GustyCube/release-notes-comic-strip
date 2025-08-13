@@ -1,3 +1,5 @@
 node_modules/
-dist/
-local/out
+*.log
+comic-art/
+local/out/
+.env

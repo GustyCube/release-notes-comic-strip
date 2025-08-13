@@ -1,6 +1,6 @@
 # Release Notes Comic Strip
 
-![alt text](image.png)
+![Comic Strip Example](image.png)
 > Note: This uses DALLE-3, which isn't as good for text processing, but `gpt-image-1` wasn't available to me.
 
 **🏆 For The Love of Code 2025 Hackathon Submission**

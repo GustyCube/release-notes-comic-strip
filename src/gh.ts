@@ -53,3 +53,39 @@ export async function currentTag(octokit: ReturnType<typeof client>, owner: stri
 }
 
 export function repoInfo() { return github.context.repo; }
+
+export async function getPRCommits(octokit: ReturnType<typeof client>, owner: string, repo: string, prNumber: number) {
+  const commits = await octokit.rest.pulls.listCommits({ owner, repo, pull_number: prNumber, per_page: 100 });
+  return commits.data.map((c, index) => ({
+    number: index + 1, // Use commit index as unique identifier
+    title: c.commit.message.split('\n')[0],
+    body: c.commit.message,
+    user: { login: c.author?.login || c.commit.author?.name || 'unknown' },
+    labels: [],
+    sha: c.sha.substring(0, 7) // Include short SHA for reference
+  }));
+}
+
+export async function postPRComment(octokit: ReturnType<typeof client>, owner: string, repo: string, prNumber: number, body: string, imagePath?: string) {
+  let commentBody = body;
+  
+  if (imagePath) {
+    const fs = await import("fs");
+    const data = fs.readFileSync(imagePath);
+    const base64 = data.toString('base64');
+    commentBody += `\n\n![Comic Strip](data:image/png;base64,${base64})`;
+  }
+  
+  await octokit.rest.issues.createComment({
+    owner,
+    repo,
+    issue_number: prNumber,
+    body: commentBody
+  });
+}
+
+export function getPRContext() {
+  const prNumber = github.context.payload.pull_request?.number;
+  const eventName = github.context.eventName;
+  return { prNumber, eventName };
+}

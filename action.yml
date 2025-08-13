@@ -1,5 +1,5 @@
 name: "Release Notes Comic (1x4)"
-description: "Plans and renders a 1×4 comic from merged PRs and attaches it to the GitHub Release."
+description: "Plans and renders a 1×4 comic from merged PRs or PR commits and posts it as a comment or release asset."
 author: "you"
 inputs:
   from:
@@ -9,11 +9,11 @@ inputs:
     description: "End ref (tag/sha). Default: current tag"
     required: false
   style:
-    description: "Art style hint (retro|manga|sci-fi|noir|pixel)"
-    default: "retro"
+    description: "Art style hint (comic|retro|manga|sci-fi|noir|pixel)"
+    default: "comic"
   persona:
-    description: "Narrator voice (noir|hype|deadpan)"
-    default: "noir"
+    description: "Narrator voice (friendly|noir|hype|deadpan)"
+    default: "friendly"
   attach_as:
     description: "Attachment filename"
     default: "release-comic.png"
@@ -22,4 +22,5 @@ runs:
   main: "dist/index.js"
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
+  issues: write
