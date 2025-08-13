@@ -1,6 +1,7 @@
 {
   "name": "release-notes-comic-strip",
   "version": "0.1.0",
+  "description": "GitHub Action that generates comic strips from release notes",
   "private": false,
   "type": "module",
   "main": "dist/index.js",
