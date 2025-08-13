@@ -38,19 +38,22 @@ jobs:
       - name: Upload comic as artifact
         if: always()
         uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: pr-comic-strip
           path: comic-art/comic-1x4.png
           if-no-files-found: ignore
       
-      - name: Comment with artifact link
+      - name: Comment with comic link
         if: always()
         uses: actions/github-script@v7
         with:
           script: |
+            const runId = context.runId;
+            const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🎨 Comic generation completed! The comic strip has been uploaded as an artifact. Check the [Actions tab](../../actions) to download it.'
+              body: `🎨 **Comic Strip Generated!**\n\n![PR Comic Strip](${artifactUrl})\n\n[📥 Download Comic Strip](${artifactUrl})\n\n*Generated from the commits in this PR*`
             })
