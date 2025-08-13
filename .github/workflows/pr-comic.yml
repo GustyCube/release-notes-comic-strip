@@ -1,0 +1,16 @@
+name: PR Comic Strip
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  comic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

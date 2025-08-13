@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { client, currentTag, mergedPRsBetween, createOrUpdateReleaseWithAsset, repoInfo } from "./gh.js";
+import { client, currentTag, mergedPRsBetween, createOrUpdateReleaseWithAsset, repoInfo, getPRCommits, postPRComment, getPRContext } from "./gh.js";
 import { planPanels } from "./planner.js";
 import { renderPanels } from "./images.js";
 import { stitch1x4 } from "./compose.js";
@@ -9,12 +9,25 @@ import path from "path";
 async function run() {
   const octo = client();
   const { owner, repo } = repoInfo();
-  let to = core.getInput("to") || await currentTag(octo, owner, repo);
-  if (!to) throw new Error("No end tag detected. Push a tag or set inputs.to");
-  let from = core.getInput("from") || await previousTag(octo, owner, repo, to);
-  if (!from) throw new Error("No start tag detected. Set inputs.from");
-  const prs = await mergedPRsBetween(octo, owner, repo, from, to);
-  if (!prs.length) { core.setOutput("skipped","no-prs"); return; }
+  const { prNumber, eventName } = getPRContext();
+  
+  let prs;
+  let from, to;
+  
+  if (eventName === 'pull_request' && prNumber) {
+    // PR mode: generate comic from PR commits
+    console.log(`[PR Mode] Generating comic for PR #${prNumber}`);
+    prs = await getPRCommits(octo, owner, repo, prNumber);
+    if (!prs.length) { core.setOutput("skipped","no-commits"); return; }
+  } else {
+    // Release mode: generate comic from merged PRs between tags
+    to = core.getInput("to") || await currentTag(octo, owner, repo);
+    if (!to) throw new Error("No end tag detected. Push a tag or set inputs.to");
+    from = core.getInput("from") || await previousTag(octo, owner, repo, to);
+    if (!from) throw new Error("No start tag detected. Set inputs.from");
+    prs = await mergedPRsBetween(octo, owner, repo, from, to);
+    if (!prs.length) { core.setOutput("skipped","no-prs"); return; }
+  }
   const style = core.getInput("style") || "comic";
   const persona = core.getInput("persona") || "friendly";
   const attachName = core.getInput("attach_as") || "release-comic.png";
@@ -26,8 +39,18 @@ async function run() {
   const outPNG = path.join(work, "comic-1x4.png");
   await stitch1x4(panelPaths, outPNG, plan.title, plan.panels, plan.selectedPRs);
 
-  const releaseBody = `## ${plan.title}\n\n${plan.alt}\n\n— Generated as a 1×4 comic from merged PRs between \`${from}\` → \`${to}\``;
-  await createOrUpdateReleaseWithAsset(octo, owner, repo, to, plan.title, releaseBody, outPNG, attachName);
+  if (eventName === 'pull_request' && prNumber) {
+    // Post comic as PR comment
+    const commentBody = `## ${plan.title}\n\n${plan.alt}\n\n— Generated comic from commits in this PR 🎨`;
+    await postPRComment(octo, owner, repo, prNumber, commentBody, outPNG);
+    core.setOutput("pr_comment", "posted");
+  } else {
+    // Attach to release (original behavior)
+    const releaseBody = `## ${plan.title}\n\n${plan.alt}\n\n— Generated as a 1×4 comic from merged PRs between \`${from}\` → \`${to}\``;
+    if (!to) throw new Error("Missing 'to' tag for release mode");
+    await createOrUpdateReleaseWithAsset(octo, owner, repo, to, plan.title, releaseBody, outPNG, attachName);
+  }
+  
   core.setOutput("image", outPNG);
 }
 
