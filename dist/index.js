@@ -9,6 +9,20 @@ async function run() {
     const octo = client();
     const { owner, repo } = repoInfo();
     const { prNumber, eventName } = getPRContext();
+    console.log(`[Debug] Event: ${eventName}, PR: ${prNumber}, Owner: ${owner}, Repo: ${repo}`);
+    // Always post a debug comment first
+    if (eventName === 'pull_request' && prNumber) {
+        try {
+            await octo.rest.issues.createComment({
+                owner, repo,
+                issue_number: prNumber,
+                body: `🔍 **Debug Info**\n- Event: ${eventName}\n- PR: #${prNumber}\n- Repo: ${owner}/${repo}\n- OpenAI Key: ${process.env.OPENAI_API_KEY ? 'Present' : 'Missing'}\n- Starting comic generation...`
+            });
+        }
+        catch (e) {
+            console.log('[Debug] Failed to post debug comment:', e.message);
+        }
+    }
     let prs;
     let from, to;
     if (eventName === 'pull_request' && prNumber) {
