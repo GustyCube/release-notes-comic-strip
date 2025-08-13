@@ -1,0 +1,99 @@
+import OpenAI from "openai";
+import type { PR } from "./gh.js";
+
+export type PanelPlan = { caption: string; dialogue: string; prompt: string };
+export type Plan = { title: string; panels: PanelPlan[]; alt: string };
+
+export async function planPanels(prs: PR[], style: string, persona: string): Promise<Plan> {
+  console.log("[Planner] Starting panel planning...");
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY environment variable is required");
+  }
+  console.log("[Planner] API key found");
+  const title = deriveTitle(prs);
+  const alt = prs.map(p=>`• #${p.number} ${p.title}`).join("\n");
+  console.log("[Planner] Title:", title);
+  const client = new OpenAI({ apiKey });
+  const sys = "You are a comic strip writer creating fun comics about software development. Output concise JSON with exactly four panels. Each panel must include: caption (the PR title/number), dialogue (<=120 chars, upbeat and developer-friendly), prompt (IMPORTANT: Generate a comic book style panel. Show cartoon developer characters with expressions and poses. Include the dialogue in speech bubbles within the image. Add visual comic elements: thought clouds, action lines, sound effects (BOOM!, WHOOSH!, etc). Scene should be in classic comic book art style with bold outlines, flat colors, and dynamic poses. The speech bubbles should contain the actual dialogue text specified).";
+  const prDetails = prs.map(pr => {
+    let details = `#${pr.number} ${pr.title}`;
+    if (pr.body && pr.body.trim()) {
+      // Summarize body to avoid token limits
+      const bodySummary = pr.body.trim().substring(0, 200);
+      details += `\nDescription: ${bodySummary}${pr.body.length > 200 ? '...' : ''}`;
+    }
+    if (pr.labels && pr.labels.length > 0) {
+      details += `\nLabels: ${pr.labels.map(l => l.name).join(', ')}`;
+    }
+    if (pr.user) {
+      details += `\nAuthor: ${pr.user.login}`;
+    }
+    return details;
+  }).join('\n\n');
+  
+  const userPrompt = `Persona: ${persona}. Art style: ${style}. 
+
+Please analyze these Pull Requests and create a 4-panel comic story that captures the essence of these changes. Use the PR descriptions to understand what was actually changed and create visual scenes that represent the technical work done:
+
+${prDetails}`;
+  
+  console.log("[Planner] Creating OpenAI client...");
+  console.log("[Planner] Calling OpenAI API with model: gpt-4o");
+  console.log("[Planner] User prompt:", userPrompt);
+  
+  try {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: userPrompt },
+        { role: "user", content: "Return JSON: { title, panels:[{caption,dialogue,prompt}], alt } with exactly 4 panels." }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7
+    });
+    console.log("[Planner] Chat completion API call successful");
+    
+    const resp = completion.choices[0].message.content;
+    console.log("[Planner] Raw response:", resp);
+    if (!resp) {
+      throw new Error("Failed to get response from OpenAI API");
+    }
+    const parsed: any = safeParseJSON(resp);
+    console.log("[Planner] Parsed response:", JSON.stringify(parsed, null, 2));
+    
+    if (!parsed || !Array.isArray(parsed.panels) || parsed.panels.length < 4) {
+      console.error("[Planner] Invalid response format. Expected panels array with 4 items.");
+      throw new Error("Invalid response format from OpenAI API");
+    }
+    parsed.title = parsed.title || title;
+    parsed.alt = parsed.alt || alt;
+    parsed.panels = parsed.panels.slice(0, 4);
+    console.log("[Planner] Final plan ready with", parsed.panels.length, "panels");
+    return parsed as Plan;
+  } catch (error: any) {
+    console.error("[Planner] OpenAI API error:", error.message);
+    if (error.response) {
+      console.error("[Planner] Response status:", error.response.status);
+      console.error("[Planner] Response data:", error.response.data);
+    }
+    throw error;
+  }
+}
+
+function deriveTitle(prs: PR[]) {
+  const words = new Map<string,number>();
+  for (const p of prs) for (const w of p.title.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) words.set(w,(words.get(w)||0)+1);
+  const top = [...words.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([w])=>w);
+  return top.length?`Release Saga: ${top.map(w=>w[0].toUpperCase()+w.slice(1)).join(" · ")}`:"Release Saga";
+}
+
+function basePrompt(title:string, style:string) {
+  return `Comic panel, ${style} style, developer office vibe, playful, minimal text in scene, theme: "${title}", clean vector, crisp lighting`;
+}
+
+
+function safeParseJSON(s: string) {
+  try { return JSON.parse(s); } catch { return null; }
+}

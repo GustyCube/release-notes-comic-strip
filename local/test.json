@@ -1,0 +1,34 @@
+{
+  "prs": [
+    {
+      "number": 101,
+      "title": "Fix flaky login race on Safari",
+      "body": "Fixed a race condition where Safari users would occasionally get stuck on the login page. The issue was caused by async token validation happening before the DOM was ready. Added proper wait conditions and retry logic.",
+      "user": { "login": "alice-dev" },
+      "labels": [{ "name": "bug" }, { "name": "safari" }]
+    },
+    {
+      "number": 102,
+      "title": "Refactor: extract billing adapters",
+      "body": "Extracted payment processing logic into separate adapter classes to support multiple payment providers. Created interfaces for Stripe, PayPal, and Apple Pay. This will make it easier to add new payment methods in the future.",
+      "user": { "login": "bob-backend" },
+      "labels": [{ "name": "refactor" }, { "name": "payments" }]
+    },
+    {
+      "number": 103,
+      "title": "Performance: speed up search index writes",
+      "body": "Optimized Elasticsearch indexing by batching write operations and implementing connection pooling. Reduced index write time from 500ms to 50ms on average. Added caching layer for frequently accessed documents.",
+      "user": { "login": "charlie-perf" },
+      "labels": [{ "name": "performance" }, { "name": "search" }]
+    },
+    {
+      "number": 104,
+      "title": "Docs: add onboarding quickstart",
+      "body": "Created a comprehensive quickstart guide for new developers. Includes setup instructions, architecture overview, and common troubleshooting steps. Added interactive code examples and links to relevant documentation.",
+      "user": { "login": "dana-docs" },
+      "labels": [{ "name": "documentation" }, { "name": "onboarding" }]
+    }
+  ],
+  "style": "comic",
+  "persona": "friendly"
+}

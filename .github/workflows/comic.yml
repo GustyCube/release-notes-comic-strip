@@ -1,0 +1,27 @@
+name: Release Notes Comic 1x4
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  comic:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm run build
+      - name: Generate Comic
+        uses: ./
+        with:
+          style: retro
+          persona: noir
+          attach_as: release-comic.png
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # optional for AI art

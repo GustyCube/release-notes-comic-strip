@@ -1,0 +1,25 @@
+name: "Release Notes Comic (1x4)"
+description: "Plans and renders a 1×4 comic from merged PRs and attaches it to the GitHub Release."
+author: "you"
+inputs:
+  from:
+    description: "Start ref (tag/sha). Default: previous tag"
+    required: false
+  to:
+    description: "End ref (tag/sha). Default: current tag"
+    required: false
+  style:
+    description: "Art style hint (retro|manga|sci-fi|noir|pixel)"
+    default: "retro"
+  persona:
+    description: "Narrator voice (noir|hype|deadpan)"
+    default: "noir"
+  attach_as:
+    description: "Attachment filename"
+    default: "release-comic.png"
+runs:
+  using: "node20"
+  main: "dist/index.js"
+permissions:
+  contents: write
+  pull-requests: read
