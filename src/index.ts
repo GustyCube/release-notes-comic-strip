@@ -15,8 +15,8 @@ async function run() {
   if (!from) throw new Error("No start tag detected. Set inputs.from");
   const prs = await mergedPRsBetween(octo, owner, repo, from, to);
   if (!prs.length) { core.setOutput("skipped","no-prs"); return; }
-  const style = core.getInput("style") || "retro";
-  const persona = core.getInput("persona") || "noir";
+  const style = core.getInput("style") || "comic";
+  const persona = core.getInput("persona") || "friendly";
   const attachName = core.getInput("attach_as") || "release-comic.png";
 
   const plan = await planPanels(prs.slice(0,8), style, persona);
