@@ -56,12 +56,13 @@ export function repoInfo() { return github.context.repo; }
 
 export async function getPRCommits(octokit: ReturnType<typeof client>, owner: string, repo: string, prNumber: number) {
   const commits = await octokit.rest.pulls.listCommits({ owner, repo, pull_number: prNumber, per_page: 100 });
-  return commits.data.map(c => ({
-    number: prNumber,
+  return commits.data.map((c, index) => ({
+    number: index + 1, // Use commit index as unique identifier
     title: c.commit.message.split('\n')[0],
     body: c.commit.message,
     user: { login: c.author?.login || c.commit.author?.name || 'unknown' },
-    labels: []
+    labels: [],
+    sha: c.sha.substring(0, 7) // Include short SHA for reference
   }));
 }
 
